@@ -35,7 +35,7 @@ io.on('connection', (socket) => {
 });
 
 // 서버 실행
-const PORT = 3306;
+const PORT = 5000;
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
