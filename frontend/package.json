@@ -43,5 +43,5 @@
       "last 1 safari version"
     ]
   },
-"proxy": "https://collab-backend-9jv5.onrender.com/"
+"proxy": "http://localhost:5000/"
 }
