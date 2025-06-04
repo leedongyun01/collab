@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api', // 백엔드 주소
+  baseURL: 'https://collab-backend-9jv5.onrender.com/', // 백엔드 주소
 });
 
 // 요청을 보낼 때마다 Authorization 헤더에 토큰을 추가
