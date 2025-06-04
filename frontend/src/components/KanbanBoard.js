@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import styles from "../styles/ProjectDetailPage.module.css";
+import api from "../utils/api";
 
 const COLUMNS = [
   { key: "TODO", label: "할 일" },
@@ -7,49 +8,24 @@ const COLUMNS = [
   { key: "DONE", label: "완료" }
 ];
 
-const getToken = () => localStorage.getItem("token");
-
 async function fetchTasks(projectId) {
-  const res = await fetch(`/api/tasks/project/${projectId}`, {
-    headers: { Authorization: `Bearer ${getToken()}` }
-  });
-  if (!res.ok) throw new Error("작업 불러오기 실패");
-  const data = await res.json();
-  return data.tasks || [];
+  const res = await api.get(`/api/tasks/project/${projectId}`);
+  if (!res.data || !Array.isArray(res.data.tasks)) throw new Error("작업 불러오기 실패");
+  return res.data.tasks || [];
 }
 
 async function createTask(projectId, title, description, status) {
-  const res = await fetch("/api/tasks", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`
-    },
-    body: JSON.stringify({ projectId, title, description, status })
-  });
-  if (!res.ok) throw new Error("작업 생성 실패");
-  return await res.json();
+  const res = await api.post("/api/tasks", { projectId, title, description, status });
+  return res.data;
 }
 
 async function updateTask(taskId, fields) {
-  const res = await fetch(`/api/tasks/${taskId}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`
-    },
-    body: JSON.stringify(fields)
-  });
-  if (!res.ok) throw new Error("작업 수정 실패");
-  return await res.json();
+  const res = await api.put(`/api/tasks/${taskId}`, fields);
+  return res.data;
 }
 
 async function deleteTask(taskId) {
-  const res = await fetch(`/api/tasks/${taskId}`, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${getToken()}` }
-  });
-  if (!res.ok) throw new Error("작업 삭제 실패");
+  await api.delete(`/api/tasks/${taskId}`);
 }
 
 export default function KanbanBoard({ projectId }) {

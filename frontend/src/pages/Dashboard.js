@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getUserInfo, getProjects, createProject } from "../api"; 
+import { getUserInfo, getProjects, createProject } from "../utils/apiHelpers";
 import styles from "../styles/Dashboard.module.css";
 
 const Dashboard = () => {
@@ -13,34 +13,43 @@ const Dashboard = () => {
 
   useEffect(() => {
     async function fetchData() {
-      const userInfo = await getUserInfo();
-      setUser(userInfo);
+      try {
+        const userInfo = await getUserInfo();
+        setUser(userInfo);
 
-      const projectList = await getProjects();
-      setProjects(projectList);
+        const projectList = await getProjects();
+        setProjects(projectList);
+      } catch (e) {
+        alert(e.message || "데이터를 불러오지 못했습니다. 다시 로그인 해주세요.");
+        navigate("/");
+      }
     }
     fetchData();
-  }, []);
+  }, [navigate]);
 
-const handleCreateProject = async (e) => {
-  e.preventDefault();
-  setCreating(true);
-  try {
-    const newProj = await createProject(newProjectName, newProjectDesc);
-    setNewProjectName("");
-    setNewProjectDesc("");
-    navigate(`/project/${newProj.id}`);
-  } finally {
-    setCreating(false);
-  }
-};
+  const handleCreateProject = async (e) => {
+    e.preventDefault();
+    setCreating(true);
+    try {
+      const newProj = await createProject(newProjectName, newProjectDesc);
+      setNewProjectName("");
+      setNewProjectDesc("");
+      navigate(`/project/${newProj.project_id}`);
+    } catch (e) {
+      alert(e.message || "프로젝트 생성 실패");
+    } finally {
+      setCreating(false);
+    }
+  };
 
   const handleProjectClick = (proj) => {
+
     navigate(`/project/${proj.project_id}`);
   };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("userInfo");
     navigate("/");
   };
 
@@ -69,7 +78,7 @@ const handleCreateProject = async (e) => {
           <div className={styles.projectsTitle}>내 프로젝트</div>
           <ul className={styles.projectsList}>
             {projects.map((proj) => (
-              <li key={proj.id} className={styles.projectItem}>
+              <li key={proj.project_id} className={styles.projectItem}>
                 <button
                   className={styles.projectButton}
                   onClick={() => handleProjectClick(proj)}

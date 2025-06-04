@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import api from '../utils/api';
 import styles from '../styles/LoginPage.module.css';
 
 const SignupPage = () => {
@@ -14,7 +14,7 @@ const SignupPage = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post('/api/auth/signup', { username, email, password });
+      await api.post('/api/auth/signup', { username, email, password });
       alert('회원가입이 완료되었습니다! 로그인 해주세요.');
       navigate('/');
     } catch (error) {

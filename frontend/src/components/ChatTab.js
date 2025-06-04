@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 import styles from "../styles/ChatTab.module.css";
+import api from "../utils/api";
 
-const SOCKET_URL = "http://localhost:5000";
+const SOCKET_URL = "https://collab-backend-9jv5.onrender.com"; // Render 백엔드 주소로 변경
+
 const getToken = () => localStorage.getItem("token");
 const getUser = () => JSON.parse(localStorage.getItem("userInfo") || "{}");
 
@@ -25,19 +27,19 @@ const ChatTab = ({ projectId }) => {
   useEffect(() => {
     if (!projectId) return;
     setLoading(true);
-    fetch(`/api/messages/${projectId}`, {
-      headers: { Authorization: `Bearer ${getToken()}` },
-    })
-      .then(res => res.json())
-      .then(data => {
-        setMessages(data);
+    api
+      .get(`/api/messages/${projectId}`)
+      .then((res) => {
+        setMessages(res.data);
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, [projectId]);
 
   useEffect(() => {
-    socketRef.current = io(SOCKET_URL);
+    socketRef.current = io(SOCKET_URL, {
+      transports: ["websocket"],
+    });
 
     socketRef.current.on("receive_message", (data) => {
       if (data.projectId === projectId) {
@@ -46,7 +48,7 @@ const ChatTab = ({ projectId }) => {
           {
             ...data,
             username: data.username || userInfo.username,
-          }
+          },
         ]);
       }
     });
@@ -60,18 +62,10 @@ const ChatTab = ({ projectId }) => {
     e.preventDefault();
     if (!input.trim()) return;
     try {
-      const res = await fetch("/api/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${getToken()}`,
-        },
-        body: JSON.stringify({
-          projectId,
-          message: input
-        }),
+      await api.post("/api/messages", {
+        projectId,
+        message: input,
       });
-      if (!res.ok) throw new Error("메시지 전송 실패");
 
       socketRef.current.emit("send_message", {
         projectId,
@@ -114,7 +108,12 @@ const ChatTab = ({ projectId }) => {
                   <div className={styles.chatMessageSender}>{sender}</div>
                   <div className={styles.chatMessageText}>{msg.message || msg.text}</div>
                   <div className={styles.chatMessageTime}>
-                    {msg.sent_at ? new Date(msg.sent_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
+                    {msg.sent_at
+                      ? new Date(msg.sent_at).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : ""}
                   </div>
                 </div>
               </div>
@@ -126,11 +125,13 @@ const ChatTab = ({ projectId }) => {
       <form onSubmit={sendMessage} className={styles.chatForm}>
         <input
           value={input}
-          onChange={e => setInput(e.target.value)}
+          onChange={(e) => setInput(e.target.value)}
           placeholder="메시지를 입력하세요"
           className={styles.chatInput}
         />
-        <button type="submit" className={styles.chatSendBtn} disabled={!input.trim()}>전송</button>
+        <button type="submit" className={styles.chatSendBtn} disabled={!input.trim()}>
+          전송
+        </button>
       </form>
     </div>
   );

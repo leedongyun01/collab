@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import axios from "axios";
+import api from "../utils/api";
 import styles from "../styles/CalendarTab.module.css";
 
 const localizer = momentLocalizer(moment);
@@ -33,7 +33,7 @@ function CalendarTab({ projectId }) {
 
   const fetchEvents = useCallback(() => {
     if (!projectId) return;
-    axios.get(`/api/events?projectId=${projectId}`)
+    api.get(`/api/events?projectId=${projectId}`)
       .then(res => setEvents(res.data.map(e => ({
         id: e.id,
         title: e.title,
@@ -60,21 +60,21 @@ function CalendarTab({ projectId }) {
     }
     try {
       if (eventData.id) {
-        await axios.put(`/api/events/${eventData.id}`, {
+        await api.put(`/api/events/${eventData.id}`, {
           title: eventData.title,
           startTime: moment(eventData.start).format("YYYY-MM-DD HH:mm:ss"),
           endTime: moment(eventData.end).format("YYYY-MM-DD HH:mm:ss"),
           description: eventData.description,
-        }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+        });
       } else {
-        await axios.post(`/api/events`, {
+        await api.post(`/api/events`, {
           projectId,
           title: eventData.title,
           startTime: moment(eventData.start).format("YYYY-MM-DD HH:mm:ss"),
           endTime: moment(eventData.end).format("YYYY-MM-DD HH:mm:ss"),
           description: eventData.description,
           createdBy: userInfo.id
-        }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+        });
       }
       fetchEvents();
       setShowModal(false);
@@ -85,9 +85,7 @@ function CalendarTab({ projectId }) {
 
   const handleDelete = async id => {
     try {
-      await axios.delete(`/api/events/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
+      await api.delete(`/api/events/${id}`);
       fetchEvents();
       setShowModal(false);
     } catch (error) {

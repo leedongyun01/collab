@@ -1,65 +1,36 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getUserInfo, getProjects } from "../api";
+import { getUserInfo, getProjects } from "../utils/apiHelpers";
+import api from "../utils/api";
 import styles from "../styles/ProjectDetailPage.module.css";
 import KanbanBoard from "../components/KanbanBoard";
 import CalendarTab from "../components/CalendarTab";
 import ChatTab from "../components/ChatTab";
 
-const getToken = () => localStorage.getItem("token");
-
 async function fetchUserIdByEmail(email) {
-  const res = await fetch(`/api/auth/by-email?email=${encodeURIComponent(email)}`, {
-    headers: { Authorization: `Bearer ${getToken()}` }
-  });
-  if (!res.ok) throw new Error("해당 이메일의 사용자를 찾을 수 없습니다.");
-  const user = await res.json();
-  return user.id;
+  const res = await api.get(`/api/auth/by-email?email=${encodeURIComponent(email)}`);
+  if (!res.data || !res.data.id) throw new Error("해당 이메일의 사용자를 찾을 수 없습니다.");
+  return res.data.id;
 }
 
 async function addOrUpdateProjectMember(projectId, userId, role = "member") {
-  const res = await fetch(`/api/project-members/add`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-    body: JSON.stringify({ projectId, userId, role }),
-  });
-  if (!res.ok) {
-    const msg = await res.text();
-    throw new Error(msg || "멤버 추가 실패");
-  }
-  return await res.json();
+  const res = await api.post(`/api/project-members/add`, { projectId, userId, role });
+  return res.data;
 }
 
 async function fetchProjectMembers(projectId) {
-  const res = await fetch(`/api/project-members?projectId=${projectId}`, {
-    headers: { Authorization: `Bearer ${getToken()}` }
-  });
-  if (!res.ok) throw new Error("프로젝트 멤버를 불러오지 못했습니다.");
-  return await res.json();
+  const res = await api.get(`/api/project-members?projectId=${projectId}`);
+  if (!res.data) throw new Error("프로젝트 멤버를 불러오지 못했습니다.");
+  return res.data;
 }
 
 async function updateProject(projectId, fields) {
-  const res = await fetch(`/api/projects/${projectId}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-    body: JSON.stringify(fields),
-  });
-  if (!res.ok) throw new Error("프로젝트 수정 실패");
-  return await res.json();
+  const res = await api.put(`/api/projects/${projectId}`, fields);
+  return res.data;
 }
 
 async function deleteProject(projectId) {
-  const res = await fetch(`/api/projects/${projectId}`, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${getToken()}` },
-  });
-  if (!res.ok) throw new Error("프로젝트 삭제 실패");
+  await api.delete(`/api/projects/${projectId}`);
 }
 
 const ProjectDetailPage = () => {
@@ -169,6 +140,7 @@ const ProjectDetailPage = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("userInfo");
     navigate("/");
   };
 
