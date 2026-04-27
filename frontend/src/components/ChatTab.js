@@ -3,7 +3,7 @@ import io from "socket.io-client";
 import styles from "../styles/ChatTab.module.css";
 import api from "../utils/api";
 
-const SOCKET_URL = "https://collab-backend-9jv5.onrender.com"; // Render 백엔드 주소로 변경
+const SOCKET_URL = process.env.REACT_APP_API_URL || "https://collab-backend-9jv5.onrender.com";
 
 const getToken = () => localStorage.getItem("token");
 const getUser = () => JSON.parse(localStorage.getItem("userInfo") || "{}");

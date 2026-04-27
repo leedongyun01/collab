@@ -1,4 +1,5 @@
 // src/index.js
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
@@ -17,7 +18,12 @@ const io = socketIo(server, { cors: { origin: '*' } });
 
 // 미들웨어
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || '*', 
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 
 // 라우터
 app.use('/api/auth', authRoutes);
@@ -35,7 +41,8 @@ io.on('connection', (socket) => {
 });
 
 // 서버 실행
-const PORT = 5000;
-server.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+const PORT = process.env.PORT || 5000;
+const HOST = process.env.HOST || 'localhost';
+server.listen(PORT, HOST, () => {
+  console.log(`Server running on http://${HOST}:${PORT}`);
 });

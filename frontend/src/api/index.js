@@ -1,4 +1,4 @@
-const API_URL = 'https://collab-backend-9jv5.onrender.com';
+const API_URL = process.env.REACT_APP_API_URL || 'https://collab-backend-9jv5.onrender.com';
 
 export async function getUserInfo() {
   const token = localStorage.getItem("token");
